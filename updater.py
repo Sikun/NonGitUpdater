@@ -16,7 +16,7 @@ def goThroughFiles(data):
         if (content["name"] in BoWList)!=whitelist:
             continue
 
-        if(content["type"]="dir"):
+        if(content["type"]=="dir"):
             resp = requests.get(url="https://api.github.com/repos/"+ repoName +"/contents/"+content["name"])
             goThroughFiles(json.loads(resp.text))
         try:
