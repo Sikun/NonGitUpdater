@@ -5,19 +5,19 @@ import json
 import requests
 
 
-def go_through_files(data, repoName, BoWList, whitelist):
+def go_through_files(data, repo_name, bw_list, is_whitelist):
     for content in data:
         print(content["name"])
 
         # check if file is in the black/whitelist
-        if (content["name"] in BoWList) != whitelist:
+        if (content["name"] in bw_list) != is_whitelist:
             print("file found in blacklist/not found in whitelist")
             continue
 
         # if there is a directory go through it per recursive call
         if(content["type"] == "dir"):
-            resp = requests.get(url="https://api.github.com/repos/" + repoName + "/contents/" + content["name"])
-            goThroughFiles(json.loads(resp.text))
+            resp = requests.get(url="https://api.github.com/repos/" + repo_name + "/contents/" + content["name"])
+            go_through_files(json.loads(resp.text))
 
         try:  # check if the file is there
             # hash the current file
@@ -49,14 +49,14 @@ def go_through_files(data, repoName, BoWList, whitelist):
 def update():
     config = configparser.ConfigParser()
     config.read_file(open('updater.settings'))
-    repoName = config.get("Section1", "repo")
-    whitelist = config.getboolean("Section1", "whitelist")
-    BoWList = str(config.get("Section1", "list")).split("\n")
+    is_whitelist = config.getboolean("Section1", "whitelist")
+    repo_name = config.get("Section1", "repo")
+    bw_list = str(config.get("Section1", "list")).split("\n")
     # get a list of files in the repo
-    resp = requests.get(url="https://api.github.com/repos/" + repoName + "/contents")
+    resp = requests.get(url="https://api.github.com/repos/" + repo_name + "/contents")
     data = json.loads(resp.text)
     # check these files
-    return go_through_files(data, repoName, BoWList, whitelist)
+    return go_through_files(data, repo_name, bw_list, is_whitelist)
 
 
 if __name__ == '__main__':
