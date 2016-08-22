@@ -7,7 +7,7 @@ import sys
 import requests
 
 
-def go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist, output):
+def _go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist, output):
     updated = False
     for content in data:
         path = os.path.join(cur_dir, content['name'])
@@ -23,7 +23,7 @@ def go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist, output):
             print("file is directory", file=output)
             os.makedirs(path, exist_ok=True)
             resp = requests.get(url=content['url'])
-            if go_through_files(path, json.loads(resp.text), repo_name, bw_list, is_whitelist, output):
+            if _go_through_files(path, json.loads(resp.text), repo_name, bw_list, is_whitelist, output):
                 updated = True
             continue
 
@@ -68,7 +68,7 @@ def update(output=sys.stdout):
     resp = requests.get(url="https://api.github.com/repos/" + repo_name + "/contents")
     data = json.loads(resp.text)
     # check these files
-    return go_through_files("", data, repo_name, bw_list, is_whitelist, output)
+    return _go_through_files("", data, repo_name, bw_list, is_whitelist, output)
 
 
 if __name__ == '__main__':
