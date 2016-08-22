@@ -2,27 +2,28 @@ import configparser
 import hashlib
 import json
 import os
+import sys
 
 import requests
 
 
-def go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist):
+def go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist, output):
     updated = False
     for content in data:
         path = os.path.join(cur_dir, content['name'])
-        print(path)
+        print(path, file=output)
 
         # check if file is in the black/whitelist
         if (content["name"] in bw_list) != is_whitelist:
-            print("file found in blacklist/not found in whitelist")
+            print("file found in blacklist/not found in whitelist", file=output)
             continue
 
         # if there is a directory go through it per recursive call
         if(content["type"] == "dir"):
-            print("file is directory")
+            print("file is directory", file=output)
             os.makedirs(path, exist_ok=True)
             resp = requests.get(url=content['url'])
-            if go_through_files(path, json.loads(resp.text), repo_name, bw_list, is_whitelist):
+            if go_through_files(path, json.loads(resp.text), repo_name, bw_list, is_whitelist, output):
                 updated = True
             continue
 
@@ -49,15 +50,15 @@ def go_through_files(cur_dir, data, repo_name, bw_list, is_whitelist):
         # different
         if not hashoff or (hashon != hashoff):
             updated = True
-            print("updating {}", path)
+            print("updating {}", path, file=output)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(resp.text)
         else:
-            print("no difference found")
+            print("no difference found", file=output)
     return updated
 
 
-def update():
+def update(output=sys.stdout):
     config = configparser.ConfigParser()
     config.read_file(open('updater.settings'))
     is_whitelist = config.getboolean("Section1", "whitelist")
@@ -67,7 +68,7 @@ def update():
     resp = requests.get(url="https://api.github.com/repos/" + repo_name + "/contents")
     data = json.loads(resp.text)
     # check these files
-    return go_through_files("", data, repo_name, bw_list, is_whitelist)
+    return go_through_files("", data, repo_name, bw_list, is_whitelist, output)
 
 
 if __name__ == '__main__':
